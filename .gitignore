@@ -1,0 +1,6 @@
+datasets/*
+!datasets/README.md
+articles/
+
+.venv/
+__pycache__/
