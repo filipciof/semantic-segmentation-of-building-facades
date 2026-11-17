@@ -21,6 +21,17 @@ MOLDING = 10
 PILLAR = 11
 SHOP = 12
 
+# Wartości pikseli w maskach po konwersji.
+
+BACKGROUND_NEW = 1
+FACADE_NEW = 2
+WINDOW_NEW = 3
+DOOR_NEW = 4
+SILL_NEW = 5
+BALCONY_NEW = 6
+SHOP_NEW = 7
+PILLAR_NEW = 8
+
 CMP_facade_DB_base = Path("datasets/CMP_facade_DB_base/base")
 CMP_facade_DB_extended = Path("datasets/CMP_facade_DB_extended/extended")
 
@@ -94,24 +105,24 @@ def resize_images_and_masks(
 
 def get_label_name(label: int) -> str:
     """
-    1 background
-    2 facade
-    3 window
-    4 door
+    Zwraca nazwę klasy na podstawie etykiety (1-8) po konwersji.
     """
 
-    mask_dict = {
-        BACKGROUND: "background",
-        FACADE: "facade",
-        WINDOW: "window",
-        DOOR: "door",
-    }
-
-    return mask_dict.get(label, "null")
+    labels = get_labels()
+    return labels[label - 1] if 1 <= label <= len(labels) else "null"
 
 
-def get_labels():
-    return ["background", "facade", "window", "door"]
+def get_labels() -> list[str]:
+    return [
+        "background",
+        "facade",
+        "window",
+        "door",
+        "sill",
+        "balcony",
+        "shop",
+        "pillar",
+    ]
 
 
 def get_old_labels() -> list[str]:
@@ -133,24 +144,24 @@ def get_old_labels() -> list[str]:
 
 def convert_mask(mask: np.ndarray) -> np.ndarray:
     """
-    Przekształca maskę na 4 wybrane przez nas klasy.
-    Działa na jedną lub kilka masek (N, H, W).
-    Zawsze używaj na oryginalnej masce.
+    Mapuje oryginalne etykiety (1-12) na nowe etykiety (1-8).
+    Działa na jednej masce (H, W) lub kilku maskach (N, H, W).
+    Przyjmuje maski z oryginalnymi etykietami, także po zmianie rozmiaru.
     """
 
     convert_dict = {
-        BACKGROUND: BACKGROUND,
-        FACADE: FACADE,
-        WINDOW: WINDOW,
-        DOOR: DOOR,
-        CORNICE: FACADE,
-        SILL: WINDOW,
-        BALCONY: FACADE,
-        BLIND: WINDOW,
-        DECO: FACADE,
-        MOLDING: FACADE,
-        PILLAR: FACADE,
-        SHOP: DOOR,
+        BACKGROUND: BACKGROUND_NEW,
+        FACADE: FACADE_NEW,
+        WINDOW: WINDOW_NEW,
+        DOOR: DOOR_NEW,
+        CORNICE: FACADE_NEW,
+        SILL: SILL_NEW,
+        BALCONY: BALCONY_NEW,
+        BLIND: WINDOW_NEW,
+        DECO: FACADE_NEW,
+        MOLDING: FACADE_NEW,
+        PILLAR: PILLAR_NEW,
+        SHOP: SHOP_NEW,
     }
 
     converted_mask = np.copy(mask)
@@ -170,9 +181,10 @@ def get_train_test_val(
     include_original_masks=True,
 ) -> dict:
     """
-    Główna funkcja do wczytywania danych z CMP_facade_DB
-    z domyślnymi wartościami argumentów. OG maski po prostu
-    mają stare etykiety, ale też mają zmieniony rozmiar.
+    Główna funkcja do wczytywania danych z CMP_facade_DB.
+    Zdjęcia i maski mają zmieniony rozmiar. Maski w "masks"
+    mają nowe etykiety (1-8). Jeśli include_original_masks=True,
+    "og_masks" zawiera maski z oryginalnymi etykietami (1-12).
 
     Zwraca dict:
     {
@@ -227,3 +239,4 @@ def get_train_test_val(
             result[name]["og_masks"] = masks_resized[indices]
 
     return result
+    
