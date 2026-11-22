@@ -17,7 +17,7 @@ def get_train_test_val(
     val_size: float = 0.15,
     random_state: int = 42,
     include_original_masks: bool = True,
-) -> dict[str, dict[str, list[np.ndarray]]]:
+) -> dict[str, dict[str, list[np.ndarray] | list[int]]]:
     """Wczytuje podział CMP na listy obrazów i masek w natywnych rozmiarach.
 
     ``masks`` zawiera maski po mapowaniu na osiem klas. Opcjonalne
@@ -45,6 +45,7 @@ def get_train_test_val(
         result[name] = {
             "images": [images[index] for index in indices],
             "masks": [convert_mask(mask) for mask in original_masks],
+            "image_ids": indices.tolist(),
         }
         if include_original_masks:
             result[name]["og_masks"] = original_masks
